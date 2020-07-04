@@ -3,8 +3,8 @@
 File directory bruteforcing
 
 ## Installation:
-***
-   git clone https://github.com/Black-widow-z/B-dirf.git && cd B-dirf && ./setup
+
+      git clone https://github.com/Black-widow-z/B-dirf.git && cd B-dirf && ./setup
 
 
 ## Run:
