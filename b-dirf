@@ -1,0 +1,217 @@
+#!/bin/bash
+
+VERSSION="(\033[33;1mv1.0.0\033[0m)"
+URL=$1
+WORDLIST="$HOME/.b-dirf/.wl/wl.txt"
+S="/"
+LEN=$((${#URL} + 35))
+THREAD=8
+COUNT=0
+COUNT2=0
+RECURSIVE="No"
+WL2="No"
+NUMs=0.08
+Banner="TRUE"
+DEF="Yes"
+
+# colors
+U="\033[4m"
+B="\033[34;1m"
+N="\033[0m"
+Y="\033[33m"
+GR="\033[2;1m"
+W="\033[37;1m"
+R="\033[31;1m"
+P="\033[35;1m"
+G="\033[32;1m"
+SB="\033[36m"
+
+# checking slash
+if [ ${URL: -1} = "/" ] 2>/dev/null;then echo -n "";else URL=$URL"/";fi
+
+# check connection
+function check_connection(){
+	printf "\n(${R}Target${N})     : ${URL}"
+	printf "\n(${R}Thread${N})     : ${THREAD}"
+	printf "\n(${R}Recursive${N})  : ${RECURSIVE}"
+	printf "\n(${R}Wordlist${N})   : ${WL2}"
+	#printf "(Status): %-$((${LEN} - 0))s" "${URL}"
+	printf "\n(${R}Host status${N}):"
+	wget -q --spider $URL 2>/dev/null;
+	if [ $? -eq 0 ];then
+		printf "(${G}UP${N})\n\n"
+	else
+		printf "(${R}DOWN${N})\n"
+		exit 1
+	fi
+}
+
+./setup.sh 2>/dev/null
+# Ping
+function Ping(){
+	$(wget -q --spider $URL$i 2>/dev/null)
+   if [ $? -eq 0 ];then
+      Type="file"
+		$(wget -q --spider $URL$i$S 2>/dev/null);
+      if [ $? -eq 0 ];then
+         Type="dir"
+		COUNT=$(($COUNT - 1))
+      fi
+      if [ $Type = "file" ];then
+         printf "\r(${G}+${N})Found\a: %-${LEN}s (${Y}File${N})\r\n" "${URL}${i}"
+      fi
+      if [ $Type = "dir" ];then
+         printf "\r(${G}+${N})Found\a: %s${B}%s${N}%-$(($LEN - $((${#URL} + ${#i} + 1 ))))s${N} (${Y}Dir${N})\r\n" "${URL}" "${i}""${S}"
+			if [ $RECURSIVE = "Yes" ];then
+				URL=$URL$i$S
+				recursive&
+			fi
+      fi
+	fi
+}
+
+function About(){
+	printf "
+${R}Name${N}    : b-dirf
+${R}Verssion${N}: ${VERSSION}
+${R}Script${N}  : bash
+${R}Author${N}  : Madhava
+${R}Org${N}     : Black-widow-z
+\n"
+}
+# Default broutfource
+function brout_fource1(){
+	for i in $(cat ${WORDLIST});do
+		Ping &
+		#printf "\r${R}~> ${N}${URL}${P}%-$(($LEN + 7))s${N}\r" "${i}"&i
+		if [ ${#i} -lt $LEN ] 2>/dev/null;then
+			printf "\r(${P}Processing${N}) : $W%-${LEN}s${N}" "${i}"
+		fi
+		if [ $COUNT -gt $THREAD ];then
+			wait -n 1
+		fi
+		COUNT=$(($COUNT + 2))
+	done
+	wait;sleep 8
+	printf "\r\a(${G}Default Scan Fineshed${N})%-38s\r\n\n"
+}
+
+# Recursive
+function recursive(){
+	for i in $(cat ${WORDLIST});do
+		Ping &
+		if [ $COUNT -gt $THREAD ];then
+			wait -n $(($THREAD / 2))
+		fi
+		COUNT=$(($COUNT + 2))
+	done
+	wait
+}
+
+# Help
+function Help(){
+	printf "> Files & Directory bruteforcer
+
+${R}Usage${N}: b-dirf <URL> [[-h][-r][-t=20][-w=/path/wordlist][-q][-n]]
+
+${U}${P}Arguments${N}                          ${U}${P}Discription${N}
+    
+  -a         --about               About
+  -h         --help                This banner
+  -r         --recursive           Recursive mode
+  -t=<int>   --thread=<int>        Number of threads
+                                   default is $THREAD
+  -w=<path>  --wordlist=<path>     Specify wordlist with path
+  -q         --quite               Start without banner
+  -n         --no-default          Run without default wordlist
+                                   use with -w\n"
+	exit 1
+}
+
+# brout_fource2
+function brout_fource2(){
+	for i in $(cat ${WORDLIST2} 2>/dev/null);do
+		Ping &
+		if [ ${#i} -lt $LEN ] 2>/dev/null;then
+			printf "\r(${P}Processing${N}) : $W%-${LEN}s${N}" "${i}"
+		fi
+		if [ $COUNT -gt $THREAD ];then
+			wait -n 1
+			#COUNT=$(($COUNT - 1))
+		fi
+		COUNT=$(($COUNT + 2))
+	done
+	wait;sleep 8
+	printf "\r(${G}Wordlist Fineshed${N})%-38s\r\n\n"
+}
+
+# Arguments
+for j in $@;do
+	case $j in
+		-h|--help|help)
+			Help;;
+		-r|--recursive)
+			RECURSIVE="Yes";;
+		-w=*|--wordlist=*)
+			WORDLIST2="${j##*\=}"
+			if [ $WORDLIST2 = $ZZZZ ] 2>/dev/null;then
+				printf "${SB}--wordlist=${N}/path/wordlist.txt\n"
+				exit 1
+			else
+				if [ -f $WORDLIST2 ];then
+					WL2="Yes"
+				else
+					printf "(${R}!${N})No such a file \"${WORDLIST2}\". try --help\n";exit 1
+				fi
+			fi;;
+		-w|--wordlist)
+			printf "${SB}--wordlist=${N}/path/wordlist.txt\n";exit 1;;
+		-t=*|--thread=*)
+			T="${j##*\=}"
+			if [ $T == $ZZZZ ] 2>/dev/null;then
+				printf "${SB}--thread=${N}<number>\n";exit 1
+				TC="FALSE"
+			fi
+			for k in $(seq 0 2000);do if [ $T -eq $k ] 2>/dev/null;then TC="TRUE";break;fi;done		
+			if [ $TC = "TRUE" ] 2>/dev/null;then
+				if [ $T -le 2 ] 2>/dev/null;then THREAD=2;
+				elif [ $T -gt 45 ] 2>/dev/null;then THREAD=45;
+				else
+					THREAD=$T
+				fi
+			else
+				printf "(${R}!${N})Integer required.\n";exit 1
+			fi;;
+
+		-t|--thread)
+			printf "${SB}--thread=${N}<number>\n";exit 1;;
+		-q|--quite)
+			Banner="FALSE";;
+		-n|--no-default)
+			DEF="No";;
+		-a|--about)
+			About;exit 1;;
+	esac
+done
+function banner(){	
+	printf "${GR}
+╔══╗──────╔═══╗─────────╔═╗$(sleep $NUMs)";printf "
+║╔╗║──────╚╗╔╗║─────────║╔╝$(sleep $NUMs)";printf "
+║╚╝╚╗─╔══╗─║║║║─╔╗─╔═╗─╔╝╚╗$(sleep $NUMs)";printf "
+║╔═╗║─╚══╝─║║║║──╣─║╔╝─╚╗╔╝$(sleep $NUMs)";printf "
+║╚═╝║─────╔╝╚╝║─║║─║║───║║─    ┌∩┐(◣_◢)┌∩┐$(sleep $NUMs)";printf "
+╚═══╝─────╚═══╝─╚╝─╚╝───╚╝─\a${N}  (${GR}@Black-widow-z${N})$(sleep $NUMs)"
+}
+if [ $1 = $ZZZZ ];then Help;exit 1;fi
+if [ $Banner = "TRUE" ];then banner;fi
+check_connection
+if [ $WL2 = "Yes" ];then
+	if [ $DEF = "No" ];then
+		brout_fource2
+	else
+		brout_fource1&brout_fource2
+	fi
+	wait
+else
+	if [ $DEF = "Yes" ];then brout_fource1;fi
+fi
